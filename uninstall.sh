@@ -25,8 +25,10 @@ if [ -f "$SETTINGS_FILE" ] && command -v jq >/dev/null; then
         .hooks //= {}
         | .hooks.Notification = strip_ours("Notification")
         | .hooks.Stop = strip_ours("Stop")
+        | .hooks.PreToolUse = strip_ours("PreToolUse")
         | if (.hooks.Notification | length) == 0 then del(.hooks.Notification) else . end
         | if (.hooks.Stop | length) == 0 then del(.hooks.Stop) else . end
+        | if (.hooks.PreToolUse | length) == 0 then del(.hooks.PreToolUse) else . end
         | if (.hooks | length) == 0 then del(.hooks) else . end
         ' "$SETTINGS_FILE" > "$TMP" && mv "$TMP" "$SETTINGS_FILE"
     ok "已清理(备份: $SETTINGS_FILE.bak)"

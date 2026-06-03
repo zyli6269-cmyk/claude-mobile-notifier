@@ -58,6 +58,7 @@ cp "$SETTINGS_FILE" "$SETTINGS_FILE.bak"
 
 NOTIF_CMD="CLAUDE_HOOK_EVENT=Notification $BRIDGE_DST"
 STOP_CMD="CLAUDE_HOOK_EVENT=Stop $BRIDGE_DST"
+PRETOOL_CMD="CLAUDE_HOOK_EVENT=PreToolUse $BRIDGE_DST"
 
 # 幂等合并:先剔除现有 hooks 中所有指向我们 bridge 脚本的 entry,再添加
 TMP=$(mktemp)
@@ -65,6 +66,7 @@ jq \
     --arg bridge "$BRIDGE_DST" \
     --arg notif_cmd "$NOTIF_CMD" \
     --arg stop_cmd "$STOP_CMD" \
+    --arg pretool_cmd "$PRETOOL_CMD" \
     '
     def strip_ours($event):
         (.hooks[$event] // [])
@@ -73,6 +75,7 @@ jq \
     .hooks //= {}
     | .hooks.Notification = (strip_ours("Notification") + [{matcher:"", hooks:[{type:"command", command:$notif_cmd}]}])
     | .hooks.Stop = (strip_ours("Stop") + [{matcher:"", hooks:[{type:"command", command:$stop_cmd}]}])
+    | .hooks.PreToolUse = (strip_ours("PreToolUse") + [{matcher:"AskUserQuestion", hooks:[{type:"command", command:$pretool_cmd}]}])
     ' "$SETTINGS_FILE" > "$TMP" && mv "$TMP" "$SETTINGS_FILE"
 
 ok "hooks 已合并(备份: $SETTINGS_FILE.bak)"
