@@ -56,9 +56,9 @@ fi
 # 备份(只保留最新一份,避免堆积)
 cp "$SETTINGS_FILE" "$SETTINGS_FILE.bak"
 
-NOTIF_CMD="CLAUDE_HOOK_EVENT=Notification $BRIDGE_DST"
-STOP_CMD="CLAUDE_HOOK_EVENT=Stop $BRIDGE_DST"
-PRETOOL_CMD="CLAUDE_HOOK_EVENT=PreToolUse $BRIDGE_DST"
+NOTIF_CMD="CLAUDE_HOOK_EVENT=Notification \"$BRIDGE_DST\""
+STOP_CMD="CLAUDE_HOOK_EVENT=Stop \"$BRIDGE_DST\""
+PRETOOL_CMD="CLAUDE_HOOK_EVENT=PreToolUse \"$BRIDGE_DST\""
 
 # 幂等合并:先剔除现有 hooks 中所有指向我们 bridge 脚本的 entry,再添加
 TMP=$(mktemp)
@@ -100,7 +100,7 @@ echo "🧪 测试推送(订阅后执行,手机应立刻响):"
 echo ""
 echo "     curl -H 'Title: 🤖 测试' -H 'Priority: high' -d '收到就成了' $SUB_URL"
 echo ""
-echo "📌 重启 VSCode 让 Claude Code 重新加载 settings.json 即可生效。"
+echo "📌 如未立刻生效,请重启 VSCode 或 Claude Code CLI。"
 echo ""
 echo "⚠️  当前用 ntfy.sh 公网中转(零运维)。推送内容(项目名/问题文本)"
 echo "    会经过 ntfy.sh 服务器。如需自托管,见 README 的'自托管'章节。"

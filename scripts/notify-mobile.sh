@@ -32,8 +32,8 @@ print($1)
 
 # ===== Bash 安全命令白名单(只读/查询类,不推送)=====
 SAFE_BASH_CMDS="ls cat head tail pwd echo printf find grep egrep fgrep awk sed which command type file stat wc sort uniq cut tr basename dirname env date uname hostname whoami id jq yq true false test ps top df du free lsof netstat ss ifconfig ipconfig ping host nslookup dig history alias declare set unset export readonly :"
-# git 的只读子命令也视为安全
-SAFE_GIT_SUBCMDS="status log diff show branch remote config rev-parse ls-files ls-tree blame describe tag stash"
+# git 的只读子命令也视为安全。会修改仓库或配置的子命令不要放进来。
+SAFE_GIT_SUBCMDS="status log diff show rev-parse ls-files ls-tree blame describe"
 
 is_safe_bash() {
     local cmd="$1"

@@ -105,7 +105,7 @@
 ### 第 1 步:克隆并安装
 
 ```bash
-git clone https://github.com/<你的 GitHub 用户名>/claude-mobile-notifier.git ~/projects/claude-mobile-notifier
+git clone https://github.com/zyli6269-cmyk/claude-mobile-notifier.git ~/projects/claude-mobile-notifier
 cd ~/projects/claude-mobile-notifier
 ./install.sh
 ```
@@ -133,11 +133,11 @@ cd ~/projects/claude-mobile-notifier
 
 ### 第 2 步:手机端订阅(下方详细说明)
 
-### 第 3 步:**重启 VSCode**
+### 第 3 步:**确认 Claude Code 重新加载配置**
 
-这是必需的!Claude Code 在启动时加载 `settings.json` 的 hooks 配置,不重启的话新加的 hooks 不会生效。
+Claude Code 通常会自动监听 `settings.json` 的变化。如果装完后没有立刻生效,请重启 VSCode 或 Claude Code CLI。
 
-> 完全关掉 VSCode 窗口,重新打开。如果你用 Claude Code CLI,关掉 terminal 重开即可。
+> 如果你用 VSCode 插件,完全关掉 VSCode 窗口后重新打开。如果你用 Claude Code CLI,关掉 terminal 重开即可。
 
 ---
 
@@ -221,7 +221,7 @@ ping host nslookup dig history alias declare set unset export readonly :
 **git 子命令白名单**:
 
 ```
-status log diff show branch remote config rev-parse ls-files ls-tree blame describe tag stash
+status log diff show rev-parse ls-files ls-tree blame describe
 ```
 
 要修改白名单,改 `scripts/notify-mobile.sh` 里的对应变量,然后重跑 `./install.sh`(它会重新部署桥接脚本)。
@@ -285,7 +285,7 @@ jq '.hooks' ~/.claude/settings.json
 
 ### Q2:Claude 弹问题/命令时手机没响
 
-1. **VSCode 重启了吗?** 装完 hooks 必须重启
+1. **Claude Code 重新加载配置了吗?** 如果装完 hooks 后没生效,请重启 VSCode 或 Claude Code CLI
 2. **看日志** `tail ~/.claude/logs/notify-mobile.log` — 有没有对应行?
    - 没有 → hook 没触发,VSCode 没加载新 settings.json
    - 有但 `ntfy_http != 200` → 网络问题
