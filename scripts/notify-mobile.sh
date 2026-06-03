@@ -27,9 +27,35 @@ try:
     d = json.load(sys.stdin)
 except Exception:
     d = {}
-# eval 表达式 $1 在 d 上
 print($1)
 " 2>/dev/null; }
+
+# ===== Bash 安全命令白名单(只读/查询类,不推送)=====
+SAFE_BASH_CMDS="ls cat head tail pwd echo printf find grep egrep fgrep awk sed which command type file stat wc sort uniq cut tr basename dirname env date uname hostname whoami id jq yq true false test ps top df du free lsof netstat ss ifconfig ipconfig ping host nslookup dig history alias declare set unset export readonly :"
+# git 的只读子命令也视为安全
+SAFE_GIT_SUBCMDS="status log diff show branch remote config rev-parse ls-files ls-tree blame describe tag stash"
+
+is_safe_bash() {
+    local cmd="$1"
+    # 含复合控制符(管道、重定向、逻辑连接、分号、子 shell)一律视为不安全
+    if printf '%s' "$cmd" | grep -qE '(&&|\|\||;|\||>|<|`|\$\()'; then
+        return 1
+    fi
+    local first second
+    first=$(printf '%s' "$cmd" | awk '{print $1}')
+    second=$(printf '%s' "$cmd" | awk '{print $2}')
+    # 通用安全命令
+    for safe in $SAFE_BASH_CMDS; do
+        [ "$first" = "$safe" ] && return 0
+    done
+    # git 的只读子命令
+    if [ "$first" = "git" ]; then
+        for safe in $SAFE_GIT_SUBCMDS; do
+            [ "$second" = "$safe" ] && return 0
+        done
+    fi
+    return 1
+}
 
 cwd=$(pyget 'd.get("cwd","")')
 project=$(basename "$cwd" 2>/dev/null || echo "")
@@ -37,24 +63,40 @@ project=$(basename "$cwd" 2>/dev/null || echo "")
 # ===== 根据事件类型组装推送内容 =====
 case "$hook_event" in
     Notification)
-        # Claude 主动通知(权限请求 / idle / 其他系统通知)
+        # Claude 主动通知(理论上权限请求会走这里,实测可能不触发)
         title="🤖 Claude 在等你"
         msg=$(pyget 'd.get("message","需要你回答")')
         priority="high"
         tags="bell,question"
         ;;
     PreToolUse)
-        # 只处理 AskUserQuestion(install.sh 用 matcher 限定)
         tool_name=$(pyget 'd.get("tool_name","")')
-        if [ "$tool_name" != "AskUserQuestion" ]; then
-            echo "[$TS] event=PreToolUse skip tool=$tool_name" >> "$LOG"
-            exit 0
-        fi
-        title="🤖 Claude 在问你"
-        # 取第一个问题文本
-        msg=$(pyget '(d.get("tool_input",{}).get("questions") or [{}])[0].get("question","等你选择")')
-        priority="high"
-        tags="bell,question"
+        case "$tool_name" in
+            AskUserQuestion)
+                title="🤖 Claude 在问你"
+                msg=$(pyget '(d.get("tool_input",{}).get("questions") or [{}])[0].get("question","等你选择")')
+                priority="high"
+                tags="bell,question"
+                ;;
+            Bash)
+                cmd=$(pyget 'd.get("tool_input",{}).get("command","")')
+                if is_safe_bash "$cmd"; then
+                    # 安全命令(ls/cat/grep 等)静默
+                    short=$(printf '%s' "$cmd" | head -c 80)
+                    echo "[$TS] event=PreToolUse Bash skip(safe): $short" >> "$LOG"
+                    exit 0
+                fi
+                title="🤖 Claude 要执行命令"
+                # 正文截断到 120 字,锁屏看不下
+                msg=$(printf '%s' "$cmd" | head -c 120)
+                priority="high"
+                tags="bell,warning"
+                ;;
+            *)
+                # 其他 tool 不推(matcher 应该已经拦了,这是兜底)
+                exit 0
+                ;;
+        esac
         ;;
     Stop)
         title="✅ Claude 完成任务"
@@ -69,7 +111,6 @@ case "$hook_event" in
 esac
 
 # ===== 写日志 =====
-# 截断长字段防日志爆炸
 short_msg=$(printf '%s' "$msg" | head -c 200)
 echo "[$TS] event=$hook_event project='$project' title='$title' msg='$short_msg' priority=$priority" >> "$LOG"
 

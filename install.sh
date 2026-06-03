@@ -75,7 +75,7 @@ jq \
     .hooks //= {}
     | .hooks.Notification = (strip_ours("Notification") + [{matcher:"", hooks:[{type:"command", command:$notif_cmd}]}])
     | .hooks.Stop = (strip_ours("Stop") + [{matcher:"", hooks:[{type:"command", command:$stop_cmd}]}])
-    | .hooks.PreToolUse = (strip_ours("PreToolUse") + [{matcher:"AskUserQuestion", hooks:[{type:"command", command:$pretool_cmd}]}])
+    | .hooks.PreToolUse = (strip_ours("PreToolUse") + [{matcher:"AskUserQuestion|Bash", hooks:[{type:"command", command:$pretool_cmd}]}])
     ' "$SETTINGS_FILE" > "$TMP" && mv "$TMP" "$SETTINGS_FILE"
 
 ok "hooks 已合并(备份: $SETTINGS_FILE.bak)"
