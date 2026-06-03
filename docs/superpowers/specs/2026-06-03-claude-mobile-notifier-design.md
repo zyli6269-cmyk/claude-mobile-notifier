@@ -2,7 +2,25 @@
 
 **日期**: 2026-06-03
 **作者**: apple
-**状态**: 设计草案
+**状态**: 已实施(带变更)
+
+## 实施变更记录(2026-06-03)
+
+实施时发现以下偏离原设计的事实,作了相应调整:
+
+1. **ntfy 服务器从"本机 docker 自托管"改为"ntfy.sh 公网中转"**
+   - 原因:用户机器未装 Docker;`brew install ntfy` 装的二进制打了 `noserver` tag 只是 client;ntfy 官方 macOS 预编译版本也只有 client;GitHub releases 直连超时(国内网络问题),从镜像下载来的二进制依然 client-only
+   - 折衷:推送内容(项目目录名 + Notification message)会经过 ntfy.sh 公网服务器
+   - 缓解:topic 名 12 位随机串(`claude-XXXXXXXXXXXX`),URL 走 HTTPS;别人不订阅你的 topic 收不到
+   - 自托管路径仍然保留,但要求用户在 Linux/NAS 上跑(README 自托管章节说明)
+
+2. **去掉 server.yml 和 docker-compose.yml**,因为不再自托管
+
+3. **去掉 LaunchAgent**,因为不需要本机服务
+
+下文设计章节的"4.1 ntfy 服务器(自托管)"和"6. 安装与配置流程"已被实际 install.sh 替代,仅保留作为日后切换自托管时的参考。
+
+---
 
 ## 1. 背景与目标
 

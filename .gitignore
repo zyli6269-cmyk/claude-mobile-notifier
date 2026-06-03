@@ -1,0 +1,10 @@
+# ntfy 缓存与日志
+ntfy-cache/
+*.log
+
+# 本地生成的 topic 配置(包含密钥性质的随机字符串)
+.topic
+config.local
+
+# macOS
+.DS_Store
